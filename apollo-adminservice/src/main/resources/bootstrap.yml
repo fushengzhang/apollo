@@ -1,23 +1,35 @@
 eureka:
-  instance:
-    hostname: ${hostname:localhost}
-    preferIpAddress: true
   client:
-    serviceUrl:
-      defaultZone: http://${eureka.instance.hostname}:8080/eureka/
-    healthcheck:
-      enabled: true
-    eurekaServiceUrlPollIntervalSeconds: 60
-
+      serviceUrl:
+        defaultZone: http://10.4.82.23:9902/eureka/
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ipAddress}:${server.port} #实例信息，显示IP和端口
 endpoints:
+  shutdown:
+    enabled: false
+    sensitive: false #禁用密码验证
   health:
     sensitive: false
 
-
-
 management:
   security:
-    enabled: false
-  health:
-    status:
-      order: DOWN, OUT_OF_SERVICE, UNKNOWN, UP 
+    enabled: false             #忽略权限拦截
+hystrix:
+  command:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 10000  #该参数可以用来设置API网关中路由转发请求的HystrixCommand执行超时时间。当路由转发请求的命令执行时间超过该配置值之后，Hystrix会将该执行命令标记为TIMEOUT并抛出异常,zuul会对该异常进行处理并返回“com.netflix.zuul.exception.zuulException”
+
+ribbon:
+  ConnectTimeout: 5000        #该参数用来设置路由转发请求的时候，创建请求连接的超时时间，当该值小于hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds时，若出现连接超时，【会自动进行重试路由请求】。如果大于，则按hystrix处理
+  ReadTimeout: 5000          #原理同ribbon.ConnectTimeout，该值表示读取超时时间
+security:                     #使用security对swagger-ui.html路径进行加密
+  basic:
+    path: /swagger-ui.html  #加密路径
+    enabled: true           # 开启加密
+  user:
+    name: renrencarmarket           #用户名
+    password: renren2017  #  密码
